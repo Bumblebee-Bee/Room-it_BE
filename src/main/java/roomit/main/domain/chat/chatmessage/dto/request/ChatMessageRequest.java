@@ -9,7 +9,8 @@ public record ChatMessageRequest(
         String sender,
         String content,
         LocalDateTime timestamp,
-        String senderType // business or member
+        String senderType, // business or member
+        Boolean isRead
         ) {
 
         public SenderType getSenderTypeEnum() {
@@ -17,6 +18,6 @@ public record ChatMessageRequest(
         }
 
         public ChatMessageRequest withTimestamp(LocalDateTime newTimestamp) {
-                return new ChatMessageRequest(this.roomId, this.sender, this.content, newTimestamp, this.senderType);
+                return new ChatMessageRequest(this.roomId, this.sender, this.content, newTimestamp, this.senderType, this.isRead);
         }
 }

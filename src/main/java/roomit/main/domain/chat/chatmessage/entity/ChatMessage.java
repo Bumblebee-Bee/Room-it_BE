@@ -38,7 +38,7 @@ public class ChatMessage {
 
     private Boolean isRead = false;
 
-    public void markAsRead() {
+    public void read() {
         this.isRead = true;
     }
 
