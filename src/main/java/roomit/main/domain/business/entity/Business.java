@@ -13,6 +13,7 @@ import roomit.main.domain.business.entity.value.BusinessNickname;
 import roomit.main.domain.business.entity.value.BusinessNum;
 import roomit.main.domain.business.entity.value.BusinessPassword;
 import roomit.main.domain.business.dto.request.BusinessUpdateRequest;
+import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 import roomit.main.domain.member.entity.Role;
 import roomit.main.domain.notification.entity.Notification;
 import roomit.main.domain.workplace.entity.Workplace;
@@ -64,6 +65,9 @@ public class Business {
 
     @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notification = new ArrayList<>();
+
+    @OneToMany(mappedBy = "business", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 
     @Builder
     public Business(final String businessName,
