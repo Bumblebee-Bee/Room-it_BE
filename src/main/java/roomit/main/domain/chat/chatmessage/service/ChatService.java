@@ -11,13 +11,14 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import roomit.main.domain.business.dto.CustomBusinessDetails;
 import roomit.main.domain.chat.chatmessage.dto.request.ChatMessageRequest;
-import roomit.main.domain.chat.chatmessage.dto.response.ChatMessageResponse;
 import roomit.main.domain.chat.chatmessage.dto.request.ChatMessageSaveRequest;
+import roomit.main.domain.chat.chatmessage.dto.response.ChatMessageResponse;
 import roomit.main.domain.chat.chatmessage.entity.ChatMessage;
 import roomit.main.domain.chat.chatmessage.entity.SenderType;
 import roomit.main.domain.chat.chatmessage.repository.ChatMessageRepository;
 import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 import roomit.main.domain.chat.chatroom.repository.ChatRoomRepository;
+import roomit.main.domain.chat.chatroom.service.ChatRoomRedisService;
 import roomit.main.domain.chat.redis.service.RedisPublisher;
 import roomit.main.domain.member.dto.CustomMemberDetails;
 import roomit.main.global.error.ErrorCode;
@@ -38,6 +39,7 @@ public class ChatService {
     private static final String REDIS_MESSAGE_KEY_FORMAT = "chat:room:{}:messages";
     private final RedisPublisher redisPublisher;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ChatRoomRedisService chatRoomRedisService;
     private final ChatRoomRepository roomRepository;
     private final ChatMessageRepository messageRepository;
     private final ObjectMapper objectMapper;
@@ -52,12 +54,15 @@ public class ChatService {
 
         validateSender(request, roomDetails);
 
+        Long connectMemberSize = chatRoomRedisService.getConnectionMemberSize("chatRoom_" + request.roomId());
+        System.out.println(connectMemberSize);
         if (request.timestamp() == null) {
             request = new ChatMessageRequest
-                    (request.roomId(), request.sender(), request.content(), LocalDateTime.now(), request.senderType());
+                    (request.roomId(), request.sender(), request.content(), LocalDateTime.now(), request.senderType(), connectMemberSize == 2);
 
             request = request.withTimestamp(LocalDateTime.now());
         }
+        System.out.println(request.toString());
         // Redis Pub/Sub 발행
         String topic = "/sub/chat/" + request.roomId();
         redisPublisher.publish(topic, request);
@@ -153,7 +158,7 @@ public class ChatService {
                 .peek(message -> {
                     if (!message.getIsRead()&&!message.getSender().equals(senderName)) {
                         // 메시지를 읽음으로 설정
-                        message.markAsRead();
+                        message.read();
                         messageRepository.save(message); // 변경 사항 저장
                     }
                 })
@@ -186,6 +191,15 @@ public class ChatService {
         }
     }
 
+    private Pair<String, SenderType> extractSenderInformation(CustomMemberDetails memberDetails, CustomBusinessDetails businessDetails) {
+        if (memberDetails != null) {
+            return Pair.of(memberDetails.getName(), SenderType.MEMBER);
+        } else if (businessDetails != null) {
+            return Pair.of(businessDetails.getName(), SenderType.BUSINESS);
+        }
+        throw ErrorCode.CHAT_NOT_AUTHORIZED.commonException();
+    }
+
     public void deleteOldMessages() {
         messageRepository.deleteByTimestampBefore(LocalDateTime.now().minusDays(30));
     }
@@ -211,15 +225,6 @@ public class ChatService {
                 log.warn("Invalid room key format: {}", roomKey, e);
             }
         }
-    }
-
-    private Pair<String, SenderType> extractSenderInformation(CustomMemberDetails memberDetails, CustomBusinessDetails businessDetails) {
-        if (memberDetails != null) {
-            return Pair.of(memberDetails.getName(), SenderType.MEMBER);
-        } else if (businessDetails != null) {
-            return Pair.of(businessDetails.getName(), SenderType.BUSINESS);
-        }
-        throw ErrorCode.CHAT_NOT_AUTHORIZED.commonException();
     }
 
     @Scheduled(fixedRateString = "${cleanupInterval:40000}") // Flush 이후 실행

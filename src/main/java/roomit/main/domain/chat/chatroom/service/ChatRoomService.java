@@ -45,7 +45,7 @@ public class ChatRoomService {
         return chatRoomRepository.findChatRoomId(memberId, business.getBusinessId(), workplaceId);
     }
 
-    public List<? extends ChatRoomResponse> getRooms(CustomMemberDetails member, CustomBusinessDetails business) {
+    public List<? extends ChatRoomResponse> getChatRooms(CustomMemberDetails member, CustomBusinessDetails business) {
             if (member != null) {
                 List<Object[]> chatRooms = chatRoomRepository.findChatRoomByMembersId(member.getId());
 
