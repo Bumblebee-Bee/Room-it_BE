@@ -7,6 +7,8 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    outputs:
+      artifact: ${{ steps.set-artifact-path.outputs.artifact }}  # ci 작업에서 출력한 아티팩트 경로
     steps:
       - uses: actions/checkout@v3
 
@@ -35,45 +37,25 @@ jobs:
         run: |
           ls -al ./build/libs/  # 여기서 .jar 파일이 존재하는지 확인
 
-      # 아티팩트 경로 설정 (set-output 대신 GITHUB_ENV 사용)
+      # 아티팩트 경로 설정
       - name: Set artifact path
         id: set-artifact-path
         run: |
           artifact="./build/libs/RoomIt_BE-0.0.1-SNAPSHOT.jar"
           echo "artifact=$artifact" >> $GITHUB_ENV  # GITHUB_ENV에 아티팩트 경로 설정
 
-      # postdeploy.sh 배포 패키지에 포함
-      - name: Include postdeploy.sh in deployment package
-        run: |
-          echo "${{ secrets.POSTDEPLOY_SCRIPT }}" > ./postdeploy.sh
-          mkdir -p ./src/.platform/hooks/postdeploy
-          mv ./postdeploy.sh ./src/.platform/hooks/postdeploy/postdeploy.sh
-
-      # 업로드된 아티팩트를 v4로 업로드
+      # 빌드된 아티팩트를 v4로 업로드
       - name: Upload artifact v4
         uses: actions/upload-artifact@v4
         with:
           name: homework
           path: ./build/libs/RoomIt_BE-0.0.1-SNAPSHOT.jar
 
-      # 빌드된 파일 및 postdeploy.sh가 포함된 배포 패키지 업로드
-      - name: Upload deployment package
-        uses: actions/upload-artifact@v4
-        with:
-          name: deployment-package
-          path: ./src
-
   cd:
     runs-on: ubuntu-latest
     needs: ci  # ci 작업이 완료된 후 실행
     steps:
-      # 현재 시간 정보 가져오기 (cd 작업에서 실행)
-      - name: Get current time
-        id: current-time
-        run: |
-          current_time=$(date -u +'%Y-%m-%dT%H-%M-%S')
-          echo "current_time=$current_time" >> $GITHUB_ENV  # 현재 시간 환경 변수로 설정
-
+      # EC2에서 SSH 키 저장
       - name: Save SSH key
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > /tmp/ssh-key.pem
@@ -95,21 +77,29 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: ap-northeast-2
 
-      # 다운로드된 아티팩트 및 배포 패키지 다운로드
-      - name: Download deployment package
+      # 업로드된 아티팩트 다운로드
+      - name: Download artifact v4
         uses: actions/download-artifact@v4
         with:
-          name: deployment-package
+          name: homework
 
-      # 다운로드된 아티팩트 압축 해제
-      - name: Unzip deployment package
+      # 다운로드된 파일 목록 확인 (디버깅용)
+      - name: List downloaded files
         run: |
-          unzip ./deployment-package/*.zip -d ./deployment-package
+          ls -al .
 
-      # 압축 해제 후 파일 목록 확인
-      - name: List files in deployment package
+      # 현재 시간 정보 가져오기
+      - name: Get current time
+        id: current-time
         run: |
-          ls -al ./deployment-package
+          echo "current_time=$(date -u +'%Y-%m-%dT%H-%M-%S')" >> $GITHUB_ENV  # 현재 UTC 시간 형식 설정
+
+      # postdeploy.sh 배포 패키지에 포함
+      - name: Include postdeploy.sh in deployment package
+        run: |
+          echo "${{ secrets.POSTDEPLOY_SCRIPT }}" > ./postdeploy.sh
+          mkdir -p ./src/.platform/hooks/postdeploy
+          mv ./postdeploy.sh ./src/.platform/hooks/postdeploy/postdeploy.sh
 
       # 빈스톡에 배포
       - name: Beanstalk Deploy
@@ -119,11 +109,6 @@ jobs:
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: bumblebee-final
           environment_name: Bumblebee-final-env
-          version_label: github-action-${{ env.current_time }}
+          version_label: github-action-${{ env.current_time }}  # 고유한 버전 레이블 사용
           region: ap-northeast-2
-          deployment_package: ./deployment-package/RoomIt_BE-0.0.1-SNAPSHOT.jar  # 압축 해제된 .jar 파일 경로로 수정
-
-
-
-
-
+          deployment_package: ./RoomIt_BE-0.0.1-SNAPSHOT.jar  # .jar 파일 경로
