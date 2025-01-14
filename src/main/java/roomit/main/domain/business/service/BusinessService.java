@@ -55,7 +55,6 @@ public class BusinessService {
         return new BusinessResponse(business);
     }
 
-
     //사업자 정보 수정
     @Transactional
     public void updateBusinessInfo(Long businessId, BusinessUpdateRequest updateRequest) {
@@ -66,17 +65,15 @@ public class BusinessService {
             if (e instanceof CommonException) {
                 throw (CommonException) e;
             } else {
-                // 새로운 예외를 던지거나 일반 오류 처리
                 throw ErrorCode.BUSINESS_NOT_MODIFY.commonException();
             }
         }
     }
 
-
     //사업자 탈퇴
     @Transactional
     public void deleteBusiness(Long businessId) {
-        businessRepository.findById(businessId)
+        Business existBusiness = businessRepository.findById(businessId)
                 .orElseThrow(ErrorCode.BUSINESS_NOT_FOUND::commonException);
 
         try {
