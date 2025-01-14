@@ -101,6 +101,11 @@ jobs:
         with:
           name: deployment-package
 
+      # 다운로드된 파일 확인
+      - name: List downloaded files
+        run: |
+          ls -al ./deployment-package  # 다운로드된 파일이 정확히 있는지 확인
+
       # 빈스톡에 배포
       - name: Beanstalk Deploy
         uses: einaregilsson/beanstalk-deploy@v20
@@ -112,5 +117,6 @@ jobs:
           version_label: github-action-${{ env.current_time }}  # cd 작업에서 생성한 current_time 사용
           region: ap-northeast-2
           deployment_package: ./deployment-package  # 다운로드된 배포 패키지 경로로 수정
+
 
 
