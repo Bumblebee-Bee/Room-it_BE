@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 import roomit.main.domain.member.dto.request.MemberUpdateRequest;
 import roomit.main.domain.member.entity.value.MemberEmail;
 import roomit.main.domain.member.entity.value.MemberNickname;
@@ -74,6 +75,9 @@ public class Member {
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MemberNotification> memberNotifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ChatRoom> chatRooms = new ArrayList<>();
 
     @Builder
     public Member(String memberNickName, String memberPhoneNumber, LocalDate birthDay, Sex memberSex, Role memberRole, String memberEmail, String memberPwd, PasswordEncoder passwordEncoder, Provider provider, List<Reservation> reservation, List<MemberNotification> list) {

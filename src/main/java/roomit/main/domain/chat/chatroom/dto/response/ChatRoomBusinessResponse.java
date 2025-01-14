@@ -35,4 +35,5 @@ public record ChatRoomBusinessResponse(
     public String name() {
         return memberNickname;
     }
+
 }

@@ -2,6 +2,8 @@ package roomit.main.domain.chat.chatroom.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import roomit.main.domain.business.dto.CustomBusinessDetails;
 import roomit.main.domain.business.entity.Business;
@@ -18,6 +20,7 @@ import roomit.main.domain.workplace.entity.Workplace;
 import roomit.main.domain.workplace.repository.WorkplaceRepository;
 import roomit.main.global.error.ErrorCode;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,32 +41,35 @@ public class ChatRoomService {
 
         Business business = workplace.getBusiness();
 
-        if (!chatRoomRepository.existsChatRoomByMemberIdAndBusinessIdAndWorkplaceId(memberId, business.getBusinessId(), workplaceId)) {
+        if (!chatRoomRepository.existsChatRoom(memberId, business.getBusinessId(), workplaceId)) {
             chatRoomRepository.save(new ChatRoom(business, member, workplace.getWorkplaceId()));
         }
 
         return chatRoomRepository.findChatRoomId(memberId, business.getBusinessId(), workplaceId);
     }
 
-    public List<? extends ChatRoomResponse> getRooms(CustomMemberDetails member, CustomBusinessDetails business) {
-            if (member != null) {
-                List<Object[]> chatRooms = chatRoomRepository.findChatRoomByMembersId(member.getId());
+    //커서 기반 페이징
+    public List<? extends ChatRoomResponse> getChatRooms(CustomMemberDetails member, CustomBusinessDetails business, LocalDateTime cursor) {
+        Pageable pageable = PageRequest.of(0, 10);
 
-                return chatRooms.stream()
-                        .map(result -> {
-                            ChatRoom chatRoom = (ChatRoom) result[0];
-                            ChatMessage chatMessage = result[1] != null ? (ChatMessage) result[1] : null;
+        if (member != null) {
+            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByMembersId(member.getId(), cursor, pageable);
 
-                            Workplace workplace = workplaceRepository.findById(chatRoom.getWorkplaceId())
-                                    .orElseThrow(ErrorCode.WORKPLACE_NOT_FOUND::commonException);
+            return chatRooms.stream()
+                    .map(result -> {
+                        ChatRoom chatRoom = (ChatRoom) result[0];
+                        ChatMessage chatMessage = result[1] != null ? (ChatMessage) result[1] : null;
 
-                            return new ChatRoomMemberResponse(chatRoom, chatMessage, workplace.getWorkplaceName().getValue());
-                        })
-                        .toList();
-            }
+                        Workplace workplace = workplaceRepository.findById(chatRoom.getWorkplaceId())
+                                .orElseThrow(ErrorCode.WORKPLACE_NOT_FOUND::commonException);
+
+                        return new ChatRoomMemberResponse(chatRoom, chatMessage, workplace.getWorkplaceName().getValue());
+                    })
+                    .toList();
+        }
 
         if (business != null) {
-            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByBusinessId(business.getId());
+            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByBusinessId(business.getId(), cursor, pageable);
 
             return chatRooms.stream()
                     .map(result -> {
