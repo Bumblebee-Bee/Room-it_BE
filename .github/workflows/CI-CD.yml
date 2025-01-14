@@ -101,10 +101,10 @@ jobs:
         with:
           name: deployment-package
 
-      # 다운로드된 파일 확인
+      # 다운로드된 파일 목록 확인
       - name: List downloaded files
         run: |
-          ls -al ./deployment-package  # 다운로드된 파일이 정확히 있는지 확인
+          ls -al ./  # 현재 디렉토리에서 파일들을 확인
 
       # 빈스톡에 배포
       - name: Beanstalk Deploy
@@ -114,9 +114,10 @@ jobs:
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: bumblebee-final
           environment_name: Bumblebee-final-env
-          version_label: github-action-${{ env.current_time }}  # cd 작업에서 생성한 current_time 사용
+          version_label: github-action-${{ env.current_time }}
           region: ap-northeast-2
-          deployment_package: ./deployment-package  # 다운로드된 배포 패키지 경로로 수정
+          deployment_package: ./  # 올바른 경로로 수정, 또는 다운로드된 파일 이름을 명시적으로 지정
+
 
 
 
