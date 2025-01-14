@@ -111,5 +111,6 @@ jobs:
           environment_name: Bumblebee-final-env
           version_label: github-action-${{ env.current_time }}  # cd 작업에서 생성한 current_time 사용
           region: ap-northeast-2
-          deployment_package: ./src  # 수정된 배포 패키지 경로
+          deployment_package: ./deployment-package  # 다운로드된 배포 패키지 경로로 수정
+
 
