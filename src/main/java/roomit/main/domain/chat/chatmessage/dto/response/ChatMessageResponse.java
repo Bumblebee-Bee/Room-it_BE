@@ -43,4 +43,5 @@ public record ChatMessageResponse(
                 request.timestamp()
         );
     }
+
 }

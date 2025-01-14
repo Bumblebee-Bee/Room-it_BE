@@ -10,6 +10,7 @@ import roomit.main.domain.chat.chatroom.dto.response.ChatRoomResponse;
 import roomit.main.domain.chat.chatroom.service.ChatRoomService;
 import roomit.main.domain.member.dto.CustomMemberDetails;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -29,7 +30,8 @@ public class ChatRoomController {
     @GetMapping("/room")
     @ResponseStatus(HttpStatus.OK)
     public List<? extends ChatRoomResponse> list(@AuthenticationPrincipal CustomMemberDetails memberDetails,
-                                                 @AuthenticationPrincipal CustomBusinessDetails businessDetails){
-        return chatRoomService.getChatRooms(memberDetails, businessDetails);
+                                                 @AuthenticationPrincipal CustomBusinessDetails businessDetails,
+                                                 @RequestParam() LocalDateTime cursor) {  // 커서만 받기
+        return chatRoomService.getChatRooms(memberDetails, businessDetails, cursor);
     }
 }

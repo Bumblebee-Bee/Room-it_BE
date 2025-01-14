@@ -2,20 +2,27 @@
 //
 //import jakarta.transaction.Transactional;
 //import org.junit.jupiter.api.*;
+//import org.locationtech.jts.geom.Coordinate;
+//import org.locationtech.jts.geom.GeometryFactory;
+//import org.locationtech.jts.geom.Point;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
+//import org.springframework.data.domain.PageRequest;
+//import org.springframework.data.domain.Pageable;
 //import org.springframework.data.redis.core.RedisTemplate;
 //import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 //import org.springframework.test.context.ActiveProfiles;
-//import roomit.main.domain.business.dto.CustomBusinessDetails;
 //import roomit.main.domain.business.entity.Business;
 //import roomit.main.domain.business.repository.BusinessRepository;
+//import roomit.main.domain.chat.chatmessage.dto.request.ChatMessageSaveRequest;
+//import roomit.main.domain.chat.chatmessage.entity.ChatMessage;
+//import roomit.main.domain.chat.chatmessage.entity.SenderType;
 //import roomit.main.domain.chat.chatmessage.repository.ChatMessageRepository;
 //import roomit.main.domain.chat.chatmessage.service.ChatService;
-//import roomit.main.domain.chat.chatroom.dto.response.ChatRoomBusinessResponse;
 //import roomit.main.domain.chat.chatroom.dto.response.ChatRoomMemberResponse;
 //import roomit.main.domain.chat.chatroom.dto.response.ChatRoomResponse;
-//import roomit.main.domain.chat.chatroom.repositoroy.ChatRoomRepository;
+//import roomit.main.domain.chat.chatroom.entity.ChatRoom;
+//import roomit.main.domain.chat.chatroom.repository.ChatRoomRepository;
 //import roomit.main.domain.chat.chatroom.service.ChatRoomService;
 //import roomit.main.domain.member.dto.CustomMemberDetails;
 //import roomit.main.domain.member.entity.Member;
@@ -25,12 +32,14 @@
 //import roomit.main.domain.studyroom.repository.StudyRoomRepository;
 //import roomit.main.domain.workplace.entity.Workplace;
 //import roomit.main.domain.workplace.repository.WorkplaceRepository;
+//import roomit.main.global.error.ErrorCode;
 //import roomit.main.global.service.ImageService;
 //
 //import java.time.LocalDate;
 //import java.time.LocalDateTime;
 //import java.time.LocalTime;
 //import java.util.List;
+//import java.util.stream.Collectors;
 //
 //import static org.junit.jupiter.api.Assertions.assertEquals;
 //import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -39,7 +48,7 @@
 //@SpringBootTest
 //@ActiveProfiles("test")
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-//class ChatServiceIntegrationTest {
+//class ChatIntegrationTest {
 //
 //    @Autowired
 //    private ChatService chatService;
@@ -114,11 +123,15 @@
 //
 //        memberRepository.save(member);
 //
+//        GeometryFactory geometryFactory = new GeometryFactory();
+//        Point location = geometryFactory.createPoint(new Coordinate(127.0, 37.0));
+//
 //        workplace = Workplace.builder()
 //                .workplaceName("Workplace")
 //                .workplacePhoneNumber("0507-1234-5678")
 //                .workplaceDescription("사업장 설명")
 //                .workplaceAddress("서울 중구 장충단로 247 굿모닝시티 8층")
+//                .location(location)
 //                .imageUrl(imageService.createImageUrl("Workplace"))
 //                .workplaceStartTime(LocalTime.of(9, 0))
 //                .workplaceEndTime(LocalTime.of(18, 0))
@@ -155,28 +168,37 @@
 //
 //        //Given
 //        Long memberId = member.getMemberId();
-//        Long studyRoomId = studyRoom.getStudyRoomId();
+//        Long workplaceId = workplace.getWorkplaceId();
 //
 //        // When
-//        chatRoomService.create(memberId, studyRoomId);
+//        chatRoomService.create(memberId, workplaceId);
 //        //then
-//        boolean chatRoomExists = chatRoomRepository.existsChatRoomByMemberIdAndBusinessId(memberId, business.getBusinessId());
+//        boolean chatRoomExists = chatRoomRepository.existsChatRoom(memberId, business.getBusinessId(), workplace.getWorkplaceId());
 //        Assertions.assertTrue(chatRoomExists, "ChatRoom이 생성되지 않았습니다.");
 //
-//        List<ChatRoomResponse> createMemberChatRoomList = chatRoomRepository.findChatRoomByMembersId(memberId);
+//        Pageable pageable = PageRequest.of(0, 10);
+//        List<Object[]> chatRoomList = chatRoomRepository.findChatRoomByMembersId(memberId, LocalDateTime.now(), pageable);
 //
-////        Assertions.assertEquals(1,createMemberChatRoomList.size());
-//        for (ChatRoomResponse chatRoom : createMemberChatRoomList) {
-//            ChatRoomMemberResponse chatRoomMemberResponse = (ChatRoomMemberResponse) chatRoom;
+//        // ChatRoomResponse 리스트로 변환
+//        List<ChatRoomResponse> result = chatRoomList.stream()
+//                .map(resultArray -> {
+//                    ChatRoom chatRoom = (ChatRoom) resultArray[0]; // 첫 번째 요소는 ChatRoom
+//                    ChatMessage chatMessage = (ChatMessage) resultArray[1]; // 두 번째 요소는 ChatMessage (없을 수도 있음)
+//                    Workplace workplace = workplaceRepository.findById(chatRoom.getWorkplaceId())
+//                            .orElseThrow(ErrorCode.WORKPLACE_NOT_FOUND::commonException);
+//
+//                    return new ChatRoomMemberResponse(chatRoom, chatMessage, workplace.getWorkplaceName().getValue());
+//                })
+//                .collect(Collectors.toList());
+//
+//        //Then
+//        assertNotNull(result);
+//        assertEquals(chatRoomList.size(), result.size());
+//
+//        // 추가적으로 businessId와 비교
+//        for (ChatRoomResponse chatRoomResponse : result) {
+//            ChatRoomMemberResponse chatRoomMemberResponse = (ChatRoomMemberResponse) chatRoomResponse;
 //            Assertions.assertEquals(chatRoomMemberResponse.businessId(), business.getBusinessId());
-//        }
-//
-//        List<ChatRoomResponse> createBusinessChatRoomList = chatRoomRepository.findChatRoomByBusinessId(business.getBusinessId());
-//
-////        Assertions.assertEquals(1,createBusinessChatRoomList.size());
-//        for (ChatRoomResponse chatRoom : createBusinessChatRoomList) {
-//            ChatRoomBusinessResponse chatRoomMemberResponse = (ChatRoomBusinessResponse) chatRoom;
-//            Assertions.assertEquals(chatRoomMemberResponse.memberId(), memberId);
 //        }
 //    }
 //
@@ -185,13 +207,14 @@
 //    void createChatRoom_already() {
 //        //Given
 //        Long memberId = member.getMemberId();
-//        Long studyRoomId = studyRoom.getStudyRoomId();
-//        chatRoomService.create(memberId, studyRoomId);
+//        Long workplaceId = workplace.getWorkplaceId();
+//        chatRoomService.create(memberId, workplaceId);
 //
-////        //When & Then
-////        Assertions.assertThrows(CommonException.class, () -> {
-////            chatRoomService.create(memberId, studyRoomId);
-////        });
+//        //When & Then
+//        Assertions.assertEquals(
+//                chatRoomService.create(memberId, workplaceId),
+//                chatRoomRepository.findChatRoomId(memberId, business.getBusinessId(), workplace.getWorkplaceId())
+//        );
 //    }
 //
 //    @Test
@@ -201,15 +224,35 @@
 //        Long memberId = member.getMemberId();
 //        CustomMemberDetails customMemberDetails = new CustomMemberDetails(member);
 //
-//        List<ChatRoomMemberResponse> chatRoomMemberResponses = List.of(
-//                new ChatRoomMemberResponse(1L, 1L, LocalDateTime.now()),
-//                new ChatRoomMemberResponse(2L, 2L, LocalDateTime.now())
-//        );
+//        Pageable pageable = PageRequest.of(0, 10);
+//        LocalDateTime now = LocalDateTime.now();
 //
-//        List<ChatRoomResponse> chatRoom = chatRoomRepository.findChatRoomByMembersId(memberId);
+//        ChatMessageSaveRequest request = new ChatMessageSaveRequest(
+//                1L, // roomId
+//                "testSender", // sender
+//                "This is a test message.", // content
+//                LocalDateTime.now(), // timestamp
+//                SenderType.MEMBER, // senderType
+//                false // isRead
+//        );
+//        ChatRoom chatRoom1 = new ChatRoom(business, member, workplace.getWorkplaceId());
+//        ChatRoom chatRoom2 = new ChatRoom(business, member, workplace.getWorkplaceId());
+////        List<ChatRoomMemberResponse> chatRoomMemberResponses = List.of(
+////                new Object[]{
+////                        chatRoom1,
+////                        new ChatMessage(chatRoom1, request)
+////                },
+////                new Object[]{
+////                        chatRoom2,
+////                        null // 메시지가 없는 경우
+////                }
+////        );
+//
+//
+//        List<Object[]> chatRoomByMembersId = chatRoomRepository.findChatRoomByMembersId(memberId, now, pageable);
 //
 //        //When
-//        List<ChatRoomResponse> result = chatRoomService.getRooms(customMemberDetails, null);
+//        List<? extends ChatRoomResponse> chatRooms = chatRoomService.getChatRooms(customMemberDetails, null, now);
 //
 //        //Then
 //        assertNotNull(result);
@@ -237,6 +280,7 @@
 //        assertNotNull(result);
 //        assertEquals(chatRoom.size(), result.size());
 //    }
+//
 //
 ////    @Test
 ////    void testSendMessage() {

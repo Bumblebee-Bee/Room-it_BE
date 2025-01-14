@@ -14,6 +14,10 @@ public record ChatMessageSaveRequest (
         SenderType senderType,
         Boolean isRead
 ) {
+    public ChatMessageSaveRequest withTimestamp(LocalDateTime newTimestamp) {
+        return new ChatMessageSaveRequest(this.roomId, this.sender, this.content, newTimestamp, this.senderType, this.isRead);
+    }
+
     public static ChatMessageSaveRequest fromRedis(Object value, ObjectMapper objectMapper) {
         ChatMessageSaveRequest request = objectMapper.convertValue(value, ChatMessageSaveRequest.class);
 

@@ -2,10 +2,12 @@ package roomit.main.domain.chat.chatroom.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
+import roomit.main.domain.business.entity.Business;
 import roomit.main.domain.chat.chatmessage.entity.ChatMessage;
 import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record ChatRoomMemberResponse(
         Long roomId,
@@ -36,4 +38,5 @@ public record ChatRoomMemberResponse(
     public String name() {
         return workplaceName;
     }
+
 }

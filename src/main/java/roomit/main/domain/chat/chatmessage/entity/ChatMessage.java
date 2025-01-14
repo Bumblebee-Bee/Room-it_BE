@@ -2,6 +2,7 @@ package roomit.main.domain.chat.chatmessage.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import roomit.main.domain.chat.chatmessage.dto.request.ChatMessageSaveRequest;
@@ -10,7 +11,7 @@ import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 import java.time.LocalDateTime;
 
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {

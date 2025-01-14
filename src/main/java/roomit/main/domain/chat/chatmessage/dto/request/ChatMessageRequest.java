@@ -9,15 +9,10 @@ public record ChatMessageRequest(
         String sender,
         String content,
         LocalDateTime timestamp,
-        String senderType, // business or member
-        Boolean isRead
+        String senderType// business or member
         ) {
 
         public SenderType getSenderTypeEnum() {
                 return SenderType.fromString(this.senderType); // Enum으로 변환
-        }
-
-        public ChatMessageRequest withTimestamp(LocalDateTime newTimestamp) {
-                return new ChatMessageRequest(this.roomId, this.sender, this.content, newTimestamp, this.senderType, this.isRead);
         }
 }

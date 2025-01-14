@@ -15,7 +15,7 @@ import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import roomit.main.domain.chat.redis.service.RedisSubscriber;
+//import roomit.main.domain.chat.redis.service.RedisSubscriber;
 import roomit.main.domain.reservation.dto.response.ReservationResponse;
 
 import java.util.List;
@@ -59,18 +59,18 @@ public class RedisConfig {
     }
 
 
-    @Bean
-    public RedisMessageListenerContainer redisMessageListenerContainer(
-            RedisConnectionFactory connectionFactory,
-            MessageListenerAdapter listenerAdapter) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(connectionFactory);
-        container.addMessageListener(listenerAdapter, new PatternTopic("/sub/chat/*"));
-        return container;
-    }
+//    @Bean
+//    public RedisMessageListenerContainer redisMessageListenerContainer(
+//            RedisConnectionFactory connectionFactory,
+//            MessageListenerAdapter listenerAdapter) {
+//        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+//        container.setConnectionFactory(connectionFactory);
+//        container.addMessageListener(listenerAdapter, new PatternTopic("/sub/chat/*"));
+//        return container;
+//    }
 
-    @Bean
-    public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
-        return new MessageListenerAdapter(subscriber);
-    }
+//    @Bean
+//    public MessageListenerAdapter listenerAdapter(RedisSubscriber subscriber) {
+//        return new MessageListenerAdapter(subscriber);
+//    }
 }
