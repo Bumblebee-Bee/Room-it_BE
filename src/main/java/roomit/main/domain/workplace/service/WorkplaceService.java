@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import roomit.main.domain.business.entity.Business;
 import roomit.main.domain.business.repository.BusinessRepository;
 import roomit.main.domain.studyroom.dto.request.CreateStudyRoomRequest;
+import roomit.main.domain.studyroom.dto.request.FindAvailableStudyRoomRequest;
 import roomit.main.domain.studyroom.entity.StudyRoom;
 import roomit.main.domain.studyroom.repository.StudyRoomRepository;
 import roomit.main.domain.workplace.dto.request.WorkplaceGetRequest;
@@ -195,9 +196,9 @@ public class WorkplaceService {
 
 
     @Transactional(readOnly = true)
-    public List<DistanceWorkplaceResponse> findNearbyWorkplaces(String address, double maxDistance) {
+    public List<DistanceWorkplaceResponse> findNearbyWorkplaces(FindAvailableStudyRoomRequest request, double maxDistance) {
         // 1. 주소를 좌표로 변환
-        Map<String, Double> coordinates = geocoding(address);
+        Map<String, Double> coordinates = geocoding(request.address());
         Double latitude = coordinates.get("latitude");
         Double longitude = coordinates.get("longitude");
 
@@ -207,7 +208,7 @@ public class WorkplaceService {
         }
 
         // 2. 좌표와 거리 기반으로 Workplace 조회
-        List<DistanceWorkplaceResponse> results = workplaceRepository.findNearbyWorkplaces(longitude, latitude, maxDistance);
+        List<DistanceWorkplaceResponse> results = workplaceRepository.findNearbyWorkplaces(longitude, latitude, maxDistance, request.endDateTime());
 
         return results.stream()
             .map(result -> new DistanceWorkplaceResponse(

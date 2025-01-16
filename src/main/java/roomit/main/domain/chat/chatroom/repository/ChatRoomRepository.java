@@ -37,22 +37,18 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     Boolean existsChatRoom(Long memberId, Long businessId, Long workplaceId);
 
     @Query("""
-    SELECT c, m
-    FROM ChatRoom c
-    LEFT JOIN c.messages m
-    WHERE c.member.memberId = :memberId
-        AND (m.timestamp = (
+        SELECT c, m
+        FROM ChatRoom c
+        LEFT JOIN c.messages m
+        WHERE c.member.memberId = :memberId
+            AND (m.timestamp = (
             SELECT MAX(m2.timestamp)
             FROM ChatMessage m2
             WHERE m2.room.roomId = c.roomId
-        ) OR m.timestamp IS NULL)
-        AND (COALESCE(m.timestamp, c.createdAt) < :cursor)
-    ORDER BY COALESCE(m.timestamp, c.createdAt) DESC
-""")
-    List<Object[]> findChatRoomByMembersId(Long memberId,
-                                           @Param("cursor") LocalDateTime cursorTimestamp,
-                                           Pageable pageable);
-
+            ) OR m.timestamp IS NULL)
+        ORDER BY COALESCE(m.timestamp, c.createdAt) DESC
+    """)
+    List<Object[]> findChatRoomByMembersId(Long memberId);
 
 
     @Query("""
@@ -66,12 +62,9 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             FROM ChatMessage m2
             WHERE m2.room.roomId = c.roomId
         ) OR msg.timestamp IS NULL)
-        AND (COALESCE(msg.timestamp, c.createdAt) < :cursor OR :cursor IS NULL)
         ORDER BY COALESCE(msg.timestamp, c.createdAt) DESC
     """)
-    List<Object[]> findChatRoomByBusinessId(Long businessId,
-                                            @Param("cursor") LocalDateTime cursor,
-                                            Pageable pageable);
+    List<Object[]> findChatRoomByBusinessId(Long businessId);
 
 
     @Query("""
