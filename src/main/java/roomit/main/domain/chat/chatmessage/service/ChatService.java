@@ -1,7 +1,7 @@
 package roomit.main.domain.chat.chatmessage.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -120,6 +120,7 @@ public class ChatService {
     }
 
     //메시지 조회(Mysql만 사용)
+    @Transactional(readOnly = true)
     public List<ChatMessageResponse>  getChats(Long roomId, CustomMemberDetails memberDetails, CustomBusinessDetails businessDetails, LocalDateTime cursor) {
         var senderInformation = extractSenderInformation(memberDetails, businessDetails);
 
@@ -128,13 +129,20 @@ public class ChatService {
 
         ChatRoom room = chatRoomRepository.findRoomDetailsById(roomId)
                 .orElseThrow(ErrorCode.CHATROOM_NOT_FOUND::commonException);
+        log.info("room " + room.toString());
 
         validateAuthorization(senderType, room, senderName);
 
-        return chatMessageRepository
+        log.info("cursor"+cursor);
+
+        List<ChatMessageResponse> chatMessages = chatMessageRepository
                 .findByRoomId(roomId, cursor, PageRequest.of(0, 20))
-                .stream().map(ChatMessageResponse::new)
+                .stream()
+                .map(ChatMessageResponse::new)
+                .sorted(Comparator.comparing(ChatMessageResponse::timestamp)) // 시간순 정렬
                 .toList();
+
+        return chatMessages;
     }
 
     private void validateAuthorization(SenderType senderType, ChatRoom room, String senderName) {
@@ -152,16 +160,15 @@ public class ChatService {
         throw ErrorCode.CHAT_NOT_AUTHORIZED.commonException();
     }
 
-    public void readAllMyNotReadChatList(Long chatRoomId, Long userId, SenderType userType) {
+    @Transactional
+    public void readAllMyNotReadChatList(Long chatRoomId, String username, SenderType userType) {
         ChatRoom chatRoom = chatRoomRepository.findRoomDetailsById(chatRoomId)
                 .orElseThrow(ErrorCode.CHATROOM_NOT_FOUND::commonException);
         if (userType.equals(SenderType.MEMBER)) {
-            Member member = memberRepository.findById(userId)
-                    .orElseThrow(ErrorCode.MEMBER_NOT_FOUND::commonException);
+            Member member = memberRepository.findByMemberNickName(username);
             chatMessageRepository.readAllMyNotReadChatList(chatRoom, member);
         } else if (userType.equals(SenderType.BUSINESS)) {
-            Business business = businessRepository.findById(userId)
-                    .orElseThrow(ErrorCode.BUSINESS_NOT_FOUND::commonException);
+            Business business = businessRepository.findByBusinessName(username);
             chatMessageRepository.readAllMyNotReadChatList(chatRoom, business);
         }
     }
