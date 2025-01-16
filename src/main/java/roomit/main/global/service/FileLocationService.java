@@ -43,6 +43,9 @@ public class FileLocationService {
         .build();
   }
 
+  /*
+  폴더의 이미지 불러오기
+   */
   public List<String> getImagesFromFolder(String folderPath) {
     List<String> imageUrls = new ArrayList<>();
 
@@ -98,6 +101,9 @@ public class FileLocationService {
     return imageUrls;
   }
 
+  /*
+  이미지 폴더 삭제
+   */
   public void deleteImageFromFolder(String folderPath) {
     try {
       // 폴더 내 객체 목록 가져오기
@@ -125,6 +131,26 @@ public class FileLocationService {
             .build();
       } while (listObjectsResponse.isTruncated());
 
+
+    } catch (Exception e) {
+      throw ErrorCode.S3_IMAGE_NOT_DELETE.commonException();
+    }
+  }
+
+
+  /*
+  이미지 단일 삭제
+   */
+  public void deleteObject(String fileName, String folderPath) {
+    try {
+      // 객체 키 생성 (폴더 경로 + 파일 이름)
+      String objectKey = folderPath.endsWith("/") ? folderPath + fileName : folderPath + "/" + fileName;
+
+      // S3에서 객체 삭제 요청
+      s3Client.deleteObject(DeleteObjectRequest.builder()
+          .bucket(bucketName)
+          .key(objectKey)
+          .build());
 
     } catch (Exception e) {
       throw ErrorCode.S3_IMAGE_NOT_DELETE.commonException();

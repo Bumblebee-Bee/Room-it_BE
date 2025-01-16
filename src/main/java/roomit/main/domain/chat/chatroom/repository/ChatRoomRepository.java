@@ -1,11 +1,13 @@
 package roomit.main.domain.chat.chatroom.repository;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,21 +34,25 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             WHERE c.member.memberId = :memberId AND c.business.businessId = :businessId And c.workplaceId = :workplaceId
             ) THEN TRUE ELSE FALSE END
     """)
-    Boolean existsChatRoomByMemberIdAndBusinessIdAndWorkplaceId(Long memberId, Long businessId, Long workplaceId);
+    Boolean existsChatRoom(Long memberId, Long businessId, Long workplaceId);
 
     @Query("""
-        SELECT c, m
-        FROM ChatRoom c
-        LEFT JOIN c.messages m
-        WHERE c.member.memberId = :memberId
-            AND (m.timestamp = (
+    SELECT c, m
+    FROM ChatRoom c
+    LEFT JOIN c.messages m
+    WHERE c.member.memberId = :memberId
+        AND (m.timestamp = (
             SELECT MAX(m2.timestamp)
             FROM ChatMessage m2
             WHERE m2.room.roomId = c.roomId
-            ) OR m.timestamp IS NULL)
-        ORDER BY COALESCE(m.timestamp, c.createdAt) DESC
-    """)
-    List<Object[]> findChatRoomByMembersId(Long memberId);
+        ) OR m.timestamp IS NULL)
+        AND (COALESCE(m.timestamp, c.createdAt) < :cursor)
+    ORDER BY COALESCE(m.timestamp, c.createdAt) DESC
+""")
+    List<Object[]> findChatRoomByMembersId(Long memberId,
+                                           @Param("cursor") LocalDateTime cursorTimestamp,
+                                           Pageable pageable);
+
 
 
     @Query("""
@@ -60,9 +66,13 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
             FROM ChatMessage m2
             WHERE m2.room.roomId = c.roomId
         ) OR msg.timestamp IS NULL)
+        AND (COALESCE(msg.timestamp, c.createdAt) < :cursor OR :cursor IS NULL)
         ORDER BY COALESCE(msg.timestamp, c.createdAt) DESC
     """)
-    List<Object[]> findChatRoomByBusinessId(Long businessId);
+    List<Object[]> findChatRoomByBusinessId(Long businessId,
+                                            @Param("cursor") LocalDateTime cursor,
+                                            Pageable pageable);
+
 
     @Query("""
         SELECT m.roomId

@@ -11,6 +11,9 @@ public interface BusinessRepository extends JpaRepository<Business, Long> , Sear
     @Query(value = "SELECT b FROM Business b WHERE b.businessEmail.value=:businessEmail")
     Optional<Business> findByBusinessEmail(String businessEmail);
 
+	@Query(value = "SELECT b FROM Business b WHERE b.businessName.value=:businessName")
+	Business findByBusinessName(String businessName);
+
     @Query("""
 	    SELECT CASE WHEN EXISTS (
 	        SELECT 1

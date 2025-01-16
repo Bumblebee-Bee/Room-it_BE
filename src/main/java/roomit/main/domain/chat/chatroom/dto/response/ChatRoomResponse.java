@@ -1,6 +1,7 @@
 package roomit.main.domain.chat.chatroom.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import roomit.main.domain.chat.chatroom.entity.ChatRoom;
 
 import java.time.LocalDateTime;
 

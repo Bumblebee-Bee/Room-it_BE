@@ -13,11 +13,11 @@ public class ChatMessageBatchProcessor {
     private final ChatService chatService;
     private final ChatRoomRepository chatRoomRepository;
 
-    @Scheduled(fixedRate = 30000) // 1분마다 실행
-    public void flushMessages() {
-        List<Long> roomIds = chatRoomRepository.findAllRoomIds(); // Room ID 동적 조회
-        for (Long roomId : roomIds) {
-            chatService.flushMessagesToDatabase(roomId);
-        }
-    }
+//    @Scheduled(fixedRate = 30000) // 1분마다 실행
+//    public void flushMessages() {
+//        List<Long> roomIds = chatRoomRepository.findAllRoomIds(); // Room ID 동적 조회
+//        for (Long roomId : roomIds) {
+//            chatService.flushMessagesToDatabase(roomId);
+//        }
+//    }
 }
