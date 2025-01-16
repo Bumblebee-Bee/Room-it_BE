@@ -4,6 +4,8 @@ import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.jpa.impl.JPAUpdateClause;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import lombok.extern.slf4j.Slf4j;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Repository;
@@ -42,11 +44,14 @@ public class WorkplaceSearchImpl implements WorkplaceSearch {
     }
 
     @Override
-    public List<DistanceWorkplaceResponse> findNearbyWorkplaces(Double longitude, Double latitude, Double maxDistance) {
+    public List<DistanceWorkplaceResponse> findNearbyWorkplaces(Double longitude, Double latitude, Double maxDistance, LocalDateTime endTime) {
 
         QWorkplace workplace = QWorkplace.workplace;
 
         String location = String.format("POINT(%f %f)", longitude, latitude);
+
+        // LocalDateTime의 시간 부분만 추출
+        LocalTime endTimeAsLocalTime = endTime.toLocalTime();
 
         log.info("pointWKT: {}", location);
 
@@ -63,7 +68,8 @@ public class WorkplaceSearchImpl implements WorkplaceSearch {
                         numberTemplate(Double.class,
                                 "ST_Distance(ST_Transform({0}, 5181), ST_Transform(ST_GeomFromText({1}, 5181), 5181))", // 5181 좌표계 사용
                                 workplace.location, location)
-                                .loe(maxDistance)
+                                .loe(maxDistance),
+                        workplace.workplaceEndTime.loe(endTimeAsLocalTime) // endTime 조건 추가
                 )
                 .orderBy(
                         numberTemplate(Double.class,

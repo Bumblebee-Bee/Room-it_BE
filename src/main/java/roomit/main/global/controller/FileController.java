@@ -36,4 +36,10 @@ public class FileController {
     public void deleteFolder(@RequestParam(required = false) String fileLocation) {
         fileLocationService.deleteImageFromFolder(fileLocation);
     }
+
+    @DeleteMapping("/api/delete-object")
+    public void deleteObject(@RequestParam(required = false) String fileName,
+                             @RequestParam(required = false) String fileLocation) {
+        fileLocationService.deleteObject(fileName, fileLocation);
+    }
 }
