@@ -1,21 +1,29 @@
 package roomit.main.domain.chat.chatroom.listener;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import roomit.main.domain.business.repository.BusinessRepository;
 import roomit.main.domain.chat.chatmessage.dto.response.ChatConnectResponse;
+import roomit.main.domain.chat.chatmessage.entity.SenderType;
 import roomit.main.domain.chat.chatmessage.service.ChatService;
 import roomit.main.domain.chat.chatroom.event.ChatRoomConnectEvent;
 import roomit.main.domain.chat.chatroom.event.ChatRoomDisConnectEvent;
 import roomit.main.domain.chat.chatroom.service.ChatRoomRedisService;
+import roomit.main.domain.member.repository.MemberRepository;
+import roomit.main.global.error.ErrorCode;
 
 @RequiredArgsConstructor
 @Component
+@Slf4j
 public class ChatRoomEventListener {
     private final ChatRoomRedisService chatRoomRedisService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
+    private final MemberRepository memberRepository;
+    private final BusinessRepository businessRepository;
 //    private final SseService sseService;
 
     /**
@@ -26,9 +34,25 @@ public class ChatRoomEventListener {
      */
     @EventListener
     public void readAllChatAndSaveConnectMember(ChatRoomConnectEvent event){
+        log.info("Received ChatRoomConnectEvent: " + event);
+
+        Long userId = null;
+        SenderType senderType = null;
+        if(event.senderType().equalsIgnoreCase("member")){
+            userId = memberRepository.findByMemberNickName(event.connectMemberName()).getMemberId();
+            senderType = SenderType.MEMBER;
+        } else if (event.senderType().equalsIgnoreCase("business")) {
+            userId = businessRepository.findByBusinessName(event.connectMemberName()).getBusinessId();
+            senderType = SenderType.BUSINESS;
+        } else {
+            throw ErrorCode.MEMBER_NOT_FOUND.commonException();
+        }
+
+        log.info("userId"+ userId);
         chatRoomRedisService.connectChatRoom(event.chatRoomId(), event.sessionId());
-        chatService.readAllMyNotReadChatList(event.chatRoomId(), event.connectMemberId(), event.senderType());
-        messagingTemplate.convertAndSend("/sub/chat/room/" + event.chatRoomId(), new ChatConnectResponse(event.connectMemberId()));
+        chatService.readAllMyNotReadChatList(event.chatRoomId(), event.connectMemberName(), senderType);
+
+//        messagingTemplate.convertAndSend("/sub/chat/" + event.chatRoomId(), new ChatConnectResponse(userId));
 //        sseService.sendToClient("CHATROOM_UPDATE", event.getConnectMemberId(), "채팅방 목록을 업데이트 해주세요.");
     }
 
@@ -36,5 +60,4 @@ public class ChatRoomEventListener {
     public void deleteConnectMember(ChatRoomDisConnectEvent event){
         chatRoomRedisService.disConnectChatRoom(event.sessionId());
     }
-
 }

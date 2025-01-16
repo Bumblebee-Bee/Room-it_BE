@@ -13,7 +13,12 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long>, ChatRepositoryCustom {
-    @Query("SELECT cm FROM ChatMessage cm WHERE cm.room.roomId = :roomId AND cm.timestamp < :cursor ORDER BY cm.timestamp DESC")
+    @Query("""
+    SELECT cm 
+    FROM ChatMessage cm 
+    WHERE cm.room.roomId = :roomId AND cm.timestamp < :cursor 
+    ORDER BY cm.timestamp DESC
+""")
     List<ChatMessage> findByRoomId(Long roomId, LocalDateTime cursor, Pageable pageable);
     void deleteByTimestampBefore(LocalDateTime cutoffDate);
 }

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import roomit.main.domain.business.dto.CustomBusinessDetails;
 import roomit.main.domain.business.entity.Business;
 import roomit.main.domain.chat.chatmessage.entity.ChatMessage;
@@ -32,6 +33,7 @@ public class ChatRoomService {
     private final WorkplaceRepository workplaceRepository;
     private final MemberRepository memberRepository;
 
+    @Transactional
     public Long create(Long memberId, Long workplaceId) {
         Workplace workplace = workplaceRepository.findById(workplaceId)
                 .orElseThrow(ErrorCode.WORKPLACE_NOT_FOUND::commonException);
@@ -49,11 +51,10 @@ public class ChatRoomService {
     }
 
     //커서 기반 페이징
-    public List<? extends ChatRoomResponse> getChatRooms(CustomMemberDetails member, CustomBusinessDetails business, LocalDateTime cursor) {
-        Pageable pageable = PageRequest.of(0, 10);
-
+    @Transactional(readOnly = true)
+    public List<? extends ChatRoomResponse> getChatRooms(CustomMemberDetails member, CustomBusinessDetails business) {
         if (member != null) {
-            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByMembersId(member.getId(), cursor, pageable);
+            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByMembersId(member.getId());
 
             return chatRooms.stream()
                     .map(result -> {
@@ -69,7 +70,7 @@ public class ChatRoomService {
         }
 
         if (business != null) {
-            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByBusinessId(business.getId(), cursor, pageable);
+            List<Object[]> chatRooms = chatRoomRepository.findChatRoomByBusinessId(business.getId());
 
             return chatRooms.stream()
                     .map(result -> {

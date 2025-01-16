@@ -2,6 +2,7 @@ package roomit.main.domain.chat.chatmessage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -25,6 +26,7 @@ public class ChatController {
 
     @MessageMapping("/sendMessage")
     public void sendMessage(@Payload ChatMessageRequest request) {
+        log.info("sendMessage"+request);
         chatService.sendMessage(request); // Redis 발행 + MySQL 저장
     }
 
@@ -33,7 +35,7 @@ public class ChatController {
     public List<ChatMessageResponse> getMessages(@PathVariable Long roomId,
                                                  @AuthenticationPrincipal CustomMemberDetails customMemberDetails,
                                                  @AuthenticationPrincipal CustomBusinessDetails customBusinessDetails,
-                                                 @RequestParam() LocalDateTime cursor) {  // 커서만 받기
+                                                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor) {  // 커서만 받기
         return chatService.getChats(roomId, customMemberDetails, customBusinessDetails, cursor); // MySQL에서 메시지 조회
     }
 }
