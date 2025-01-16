@@ -95,7 +95,7 @@ public class StudyRoomController {
     @ResponseStatus(HttpStatus.OK)
     @PostMapping("/available")
     public List<FindPossibleStudyRoomResponse> findAvailableStudyRooms(@RequestBody @Valid FindAvailableStudyRoomRequest request) {
-        List<DistanceWorkplaceResponse> searchWorkPlace = workplaceService.findNearbyWorkplaces(request.address(), 10000);
+        List<DistanceWorkplaceResponse> searchWorkPlace = workplaceService.findNearbyWorkplaces(request, 10000);
 
         return studyRoomService.findAvailableStudyRooms(request, searchWorkPlace);
     }
