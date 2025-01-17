@@ -53,7 +53,7 @@ public enum ErrorCode {
     WORKPLACE_NAME_DUPLICATION(HttpStatus.CONFLICT, "W005", "이미 등록된 이름입니다."),
     WORKPLACE_ADDRESS_DUPLICATION(HttpStatus.CONFLICT, "W006", "이미 등록된 주소입니다."),
     WORKPLACE_PHONE_NUMBER_DUPLICATION(HttpStatus.CONFLICT, "W007", "이미 등록된 전화번호입니다."),
-    WORKPLACE_RECOMMEND_FAIL(HttpStatus.BAD_REQUEST,"W008","맞춤형 추천에 실패하였습니다."),
+    WORKPLACE_RECOMMEND_FAIL(HttpStatus.SERVICE_UNAVAILABLE,"W008","맞춤형 추천에 실패하였습니다."),
     PYTHON_CONNECTED_FAIL(HttpStatus.BAD_REQUEST,"W009","파이썬 서버와 통신에 실패하였습니다."),
 
     /*Review*/
