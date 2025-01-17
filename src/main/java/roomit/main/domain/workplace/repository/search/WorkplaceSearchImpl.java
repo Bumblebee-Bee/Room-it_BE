@@ -69,7 +69,7 @@ public class WorkplaceSearchImpl implements WorkplaceSearch {
                                 "ST_Distance(ST_Transform({0}, 5181), ST_Transform(ST_GeomFromText({1}, 5181), 5181))", // 5181 좌표계 사용
                                 workplace.location, location)
                                 .loe(maxDistance),
-                        workplace.workplaceEndTime.loe(endTimeAsLocalTime) // endTime 조건 추가
+                        workplace.workplaceEndTime.gt(endTimeAsLocalTime) // endTime 조건 추가
                 )
                 .orderBy(
                         numberTemplate(Double.class,
