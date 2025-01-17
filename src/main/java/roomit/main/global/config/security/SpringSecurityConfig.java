@@ -199,7 +199,7 @@ public class SpringSecurityConfig {
                         .requestMatchers(HttpMethod.PUT,"/api/v1/review/update/**").hasAnyRole("BUSINESS","USER") //후기 수정
                         .requestMatchers(HttpMethod.DELETE,"/api/v1/review/**").hasAnyRole("BUSINESS","USER") //후기 삭제
 
-                        .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/wss/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/chat/room/**").hasAnyRole("BUSINESS","USER")
 
                         .requestMatchers("/api/v1/chat/create").hasAnyRole("BUSINESS","USER")

@@ -156,7 +156,7 @@ public class JWTFilter extends OncePerRequestFilter {
                 "/api/v1/review/workplace/**",
                 "/api/v1/workplace/distance",
                 "/api/v1/workplace/distance",
-                "/ws/**"
+                "/wss/**"
         );
 
         AntPathMatcher pathMatcher = new AntPathMatcher();
