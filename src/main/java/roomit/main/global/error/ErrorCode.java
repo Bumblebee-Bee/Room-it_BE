@@ -79,7 +79,7 @@ public enum ErrorCode {
     S3_IMAGE_NOT_DELETE(HttpStatus.INTERNAL_SERVER_ERROR, "S002","S3에서 폴더를 삭제하는데 실패했습니다."),
 
     /*Login*/
-    LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "L001", "로그인에 실패했습니다."),
+    LOGIN_FAILED(HttpStatus.BAD_REQUEST, "L001", "로그인에 실패했습니다."),
 
     /*Token*/
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "T001", "유효하지 않은 토큰입니다."),
