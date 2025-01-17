@@ -49,7 +49,10 @@ public class ChatRoomEventListener {
         }
 
         log.info("userId"+ userId);
+
         chatRoomRedisService.connectChatRoom(event.chatRoomId(), event.sessionId());
+        if(chatRoomRedisService.getConnectionMemberSize("chatRoom_" + event.chatRoomId())==2)
+            messagingTemplate.convertAndSend("/sub/chat/connect/" + event.chatRoomId(), new ChatConnectResponse(event.connectMemberName()));
         chatService.readAllMyNotReadChatList(event.chatRoomId(), event.connectMemberName(), senderType);
 
 //        messagingTemplate.convertAndSend("/sub/chat/" + event.chatRoomId(), new ChatConnectResponse(userId));
