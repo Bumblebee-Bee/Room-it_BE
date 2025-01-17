@@ -20,5 +20,13 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long>,
     ORDER BY cm.timestamp DESC
 """)
     List<ChatMessage> findByRoomId(Long roomId, LocalDateTime cursor, Pageable pageable);
+    @Query("""
+    SELECT m
+    FROM ChatMessage m
+    WHERE m.room.roomId=:roomId
+    ORDER BY m.timestamp DESC
+""")
+    List<ChatMessage> findByRoomIdLast(Long roomId);
+
     void deleteByTimestampBefore(LocalDateTime cutoffDate);
 }
