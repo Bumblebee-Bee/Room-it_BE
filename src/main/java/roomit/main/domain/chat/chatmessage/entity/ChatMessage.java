@@ -49,5 +49,6 @@ public class ChatMessage {
         this.content = request.content();
         this.senderType = request.senderType();
         this.timestamp = request.timestamp();
+        this.isRead = request.isRead();
     }
 }
