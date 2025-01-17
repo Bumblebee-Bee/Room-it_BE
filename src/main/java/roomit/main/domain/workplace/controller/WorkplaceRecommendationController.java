@@ -20,6 +20,7 @@ import roomit.main.domain.member.repository.MemberRepository;
 import roomit.main.domain.workplace.dto.response.WorkplaceRecommendResponse;
 import roomit.main.domain.workplace.service.WorkplaceRecommendationService;
 import roomit.main.global.error.ErrorCode;
+import roomit.main.global.exception.CommonException;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,7 +46,12 @@ public class WorkplaceRecommendationController {
 
             return recommendationService.getRecommendations(customMemberDetails.getId(), age, n);
         } catch (Exception e) {
-            throw ErrorCode.WORKPLACE_RECOMMEND_FAIL.commonException();
+            // 기존 오류 코드가 담긴 예외를 그대로 던짐
+            if (e instanceof CommonException) {
+                throw (CommonException) e;
+            } else {
+                throw ErrorCode.WORKPLACE_RECOMMEND_FAIL.commonException();
+            }
         }
     }
 }
