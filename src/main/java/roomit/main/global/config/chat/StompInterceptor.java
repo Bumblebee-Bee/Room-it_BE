@@ -67,6 +67,7 @@ public class StompInterceptor implements ChannelInterceptor {
             }
         }
 
+
         return message;
     }
 }
