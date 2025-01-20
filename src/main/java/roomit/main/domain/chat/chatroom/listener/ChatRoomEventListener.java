@@ -32,13 +32,15 @@ public class ChatRoomEventListener {
      * 2. 연결된 사람의 채팅방에 안읽었던 메시지를 모두 읽음 처리
      * 3. 채팅방에 상대방이 연결되었음을 알리는 알림
      */
+    // ChatRoomEventListener.java 수정
     @EventListener
-    public void readAllChatAndSaveConnectMember(ChatRoomConnectEvent event){
+    public void readAllChatAndSaveConnectMember(ChatRoomConnectEvent event) {
         log.info("Received ChatRoomConnectEvent: " + event);
 
         Long userId = null;
         SenderType senderType = null;
-        if(event.senderType().equalsIgnoreCase("member")){
+
+        if (event.senderType().equalsIgnoreCase("member")) {
             userId = memberRepository.findByMemberNickName(event.connectMemberName()).getMemberId();
             senderType = SenderType.MEMBER;
         } else if (event.senderType().equalsIgnoreCase("business")) {
@@ -48,19 +50,28 @@ public class ChatRoomEventListener {
             throw ErrorCode.MEMBER_NOT_FOUND.commonException();
         }
 
-        log.info("userId"+ userId);
+        log.info("UserId: " + userId);
 
         chatRoomRedisService.connectChatRoom(event.chatRoomId(), event.sessionId());
-        if(chatRoomRedisService.getConnectionMemberSize("chatRoom_" + event.chatRoomId())==2)
-            messagingTemplate.convertAndSend("/sub/chat/connect/" + event.chatRoomId(), new ChatConnectResponse(event.connectMemberName()));
-        chatService.readAllMyNotReadChatList(event.chatRoomId(), event.connectMemberName(), senderType);
 
-//        messagingTemplate.convertAndSend("/sub/chat/" + event.chatRoomId(), new ChatConnectResponse(userId));
-//        sseService.sendToClient("CHATROOM_UPDATE", event.getConnectMemberId(), "채팅방 목록을 업데이트 해주세요.");
+        log.info("Redis connection size after connect: " +
+                 chatRoomRedisService.getConnectionMemberSize("chatRoom_" + event.chatRoomId()));
+
+        if (chatRoomRedisService.getConnectionMemberSize("chatRoom_" + event.chatRoomId()) == 2) {
+            messagingTemplate.convertAndSend("/sub/chat/connect/" + event.chatRoomId(),
+                    new ChatConnectResponse(event.connectMemberName()));
+        }
+        chatService.readAllMyNotReadChatList(event.chatRoomId(), event.connectMemberName(), senderType);
     }
 
     @EventListener
-    public void deleteConnectMember(ChatRoomDisConnectEvent event){
-        chatRoomRedisService.disConnectChatRoom(event.sessionId());
+    public void deleteConnectMember(ChatRoomDisConnectEvent event) {
+        String sessionId = event.sessionId();
+        log.info("Handling ChatRoomDisConnectEvent for sessionId: " + sessionId);
+
+        chatRoomRedisService.disConnectChatRoom(sessionId);
+        log.info("Redis connection size after disconnect: " +
+                 chatRoomRedisService.getConnectionMemberSize("chatRoom_" + sessionId));
     }
+
 }

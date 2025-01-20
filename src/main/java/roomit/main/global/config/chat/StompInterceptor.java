@@ -40,32 +40,27 @@ public class StompInterceptor implements ChannelInterceptor {
             String nickName = accessor.getFirstNativeHeader("nickName");
             String senderType = accessor.getFirstNativeHeader("senderType");
 
-            // 세션이 이미 연결된 상태인지 체크
             if (connectedSessions.containsKey(sessionId)) {
                 log.info("Session already connected, skipping CONNECT event for sessionId: " + sessionId);
                 return message; // 이미 연결된 세션이면 처리하지 않음
             }
 
-            // 새로운 세션을 연결된 상태로 마킹
             connectedSessions.put(sessionId, chatRoomId);
             log.info("chatRoomId: " + chatRoomId);
             log.info("sessionId: " + sessionId);
             log.info("memberName: " + nickName);
             log.info("senderType: " + senderType);
 
-            // 연결 이벤트 발행
             eventPublisher.publishEvent(new ChatRoomConnectEvent(
                     nickName, senderType, Long.valueOf(chatRoomId), sessionId
             ));
         } else if (StompCommand.DISCONNECT.equals(command)) {
             log.info("Disconnect event triggered for sessionId: " + sessionId);
 
-            // 세션이 연결된 상태인 경우에만 처리
             if (connectedSessions.containsKey(sessionId)) {
-                connectedSessions.remove(sessionId); // 세션을 연결 상태에서 제거
+                connectedSessions.remove(sessionId);
                 log.info("Session disconnected, sessionId removed: " + sessionId);
 
-                // 연결 종료 이벤트 발행
                 eventPublisher.publishEvent(new ChatRoomDisConnectEvent(sessionId));
             } else {
                 log.info("Session not found for DISCONNECT event, skipping: " + sessionId);
